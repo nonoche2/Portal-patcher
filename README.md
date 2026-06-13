@@ -8,7 +8,7 @@ It is adapted from [this guide](https://jxhug.notion.site/Guide-to-Installing-Po
 - Valve updated the Source Engine and Portal's files with Half Life 2's anniversary edition which have rendering issues with the older version of the Source Engine used for this port
 - the guide had you painstakingly copy and paste each command in the terminal
 
-This script aims to fix all these issues and create an application bundle with minimal user interaction. The script will match the game's localization to you system language settings. Note: you must own Portal on your Steam account for this to work.
+This script aims to fix all these issues and create an application bundle with minimal user interaction. The script will match the game's localization to your system language settings. Note: you must own Portal on your Steam account for this to work.
 
 ## How to use:
 
