@@ -19,6 +19,7 @@ This script aims to fix all these issues and create an application bundle with m
 The script will open the terminal, it will make sure you have all the required dependencies, download/update them if necessary, and prompt you for your Steam login so that it can download the older version of Portal
 
 - type your Steam login and hit enter
+
 you will then be prompted for your Steam password (the terminal won't display anything when you type it, that's normal)
 - type your Steam password and hit enter
 if necessary, you will then be asked for your Steam guard code. Type it and hit enter.
