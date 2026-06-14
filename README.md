@@ -38,3 +38,5 @@ If you don't want the game to run as an independant Application Bundle and want 
 - paste the files you copied
 
 you can now launch Portal from Steam
+
+a similar script is available for [Half Life 2](https://github.com/nonoche2/HL2-patcher/tree/main)
