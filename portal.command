@@ -48,6 +48,7 @@ brew update
 brew install sdl2 freetype fontconfig pkg-config opus jpeg jpeg-turbo libpng libedit python3 fileicon
 brew tap steamre/tools
 brew trust --cask steamre/tools/depotdownloader
+brew install depotdownloader
 
 # 3b. Exhaustive System Language Detection & Valve Mapping Configuration
 echo "Detecting system language layout..."
