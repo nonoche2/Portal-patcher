@@ -25,4 +25,4 @@ you will then be prompted for your Steam password (the terminal won't display an
 
 if necessary, you will then be asked for your Steam guard code. Type it and hit enter.
 
-the script will then download the older version of Portal, download the Source Engine, compile the files and create a Mac version of Portal where the script is located. Depending on your machine, the whole operation can take up to about 15 minutes.
+the script will then download the older version of Portal, download the Source Engine, compile the files and create a Mac version of Portal in the same location as the script. Depending on your machine, the whole operation can take up to about 15 minutes.
