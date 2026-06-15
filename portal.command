@@ -1,36 +1,49 @@
 #!/bin/bash
 
+gametitle="portal"
+
 # Dynamically get the directory where this script lives, no matter where it's run from
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Sandboxed Configuration (All built inside a localized PortalTemp folder)
-TEMP_WORKSPACE="$SCRIPT_DIR/PortalTemp"
-INSTALL_DIR="$TEMP_WORKSPACE/Gaming/Portal"
+# Sandboxed Configuration (All built inside a localized ${gametitle}Temp folder)
+TEMP_WORKSPACE="$SCRIPT_DIR/${gametitle}Temp"
+INSTALL_DIR="$TEMP_WORKSPACE/Gaming/$gametitle"
 REPO_DIR="$TEMP_WORKSPACE/source-engine"
 LOCAL_DEPOTS_DIR="$TEMP_WORKSPACE/depots"
 
 set -e # Exit immediately if a command exits with a non-zero status
 
+# --- Architecture Detection ---
+ARCH=$(uname -m)
+if [[ "$ARCH" == "arm64" ]]; then
+    TARGET_ARCH="arm64"
+    MAC_ARCH_NAME="Apple Silicon"
+    BREW_PATH="/opt/homebrew/bin/brew"
+else
+    TARGET_ARCH="x86_64"
+    MAC_ARCH_NAME="Intel"
+    BREW_PATH="/usr/local/bin/brew"
+fi
+
 # Ensure the temporary sandboxed folder exists before running tasks
 mkdir -p "$TEMP_WORKSPACE"
 
-echo "--- Starting Portal Build Setup ---"
+echo "--- Starting $gametitle Build Setup for $MAC_ARCH_NAME ---"
 
 # 1. Install Homebrew
 if ! command -v brew &> /dev/null; then
-    echo "Installing Homebrew..."
+    echo "Installing Homebrew for $MAC_ARCH_NAME..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     
-    if [[ $(uname -m) == 'arm64' ]]; then
-        (echo; echo 'eval "$(/opt/homebrew/bin/brew shellenv)"') >> ~/.zprofile
-        eval "$(/opt/homebrew/bin/brew shellenv)"
-    else
-        (echo; echo 'eval "$(/usr/local/bin/brew shellenv)"') >> ~/.zprofile
-        eval "$(/usr/local/bin/brew shellenv)"
-    fi
+    (echo; echo "eval \"\$($BREW_PATH shellenv)\"") >> ~/.zprofile
+    eval "$($BREW_PATH shellenv)"
 else
     echo "Homebrew already installed. Skipping."
+    # Ensure current session has brew in PATH if it was already installed
+    if [ -f "$BREW_PATH" ]; then
+        eval "$($BREW_PATH shellenv)"
+    fi
 fi
 
 # 2. Install Xcode Command Line Tools
@@ -57,6 +70,7 @@ SYS_LANG=$(echo "$RAW_LANG" | cut -c1-2)
 
 LANG_DEPOT=""
 VALVE_LANG_NAME="english"
+
 
 if [[ "$RAW_LANG" == "pt-BR" || "$RAW_LANG" == "pt_BR" ]]; then
     VALVE_LANG_NAME="brazilian"
@@ -128,18 +142,18 @@ else
     git submodule update --init --recursive
 fi
 
-# 5. Configure Build with Apple Silicon/Xcode environment
+# 5. Configure Build with Architecture Environment
 cd "$REPO_DIR"
-echo "Setting up build environment for Apple Silicon..."
+echo "Setting up build environment for $MAC_ARCH_NAME ($TARGET_ARCH)..."
 
 export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
-export CXXFLAGS="-std=c++11 -isysroot $SDKROOT -include alloca.h -Wno-null-dereference"
-export CFLAGS="-isysroot $SDKROOT -include alloca.h"
-export LDFLAGS="-L$SDKROOT/usr/lib -Wl,-syslibroot,$SDKROOT"
+export CXXFLAGS="-arch $TARGET_ARCH -std=c++11 -isysroot $SDKROOT -include alloca.h -Wno-null-dereference"
+export CFLAGS="-arch $TARGET_ARCH -isysroot $SDKROOT -include alloca.h"
+export LDFLAGS="-arch $TARGET_ARCH -L$SDKROOT/usr/lib -Wl,-syslibroot,$SDKROOT"
 
 echo "Configuring..."
 python3 waf distclean
-python3 waf configure -T release --prefix='' --build-games=portal
+python3 waf configure -T release --prefix='' --build-games=$gametitle --disable-warns
 
 # 6. Build and Install
 echo "Building..."
@@ -153,10 +167,10 @@ echo "--- Performing Post-Build File Operations ---"
 DEPOT_TARGET_DIR="$LOCAL_DEPOTS_DIR"
 
 if [ -d "$DEPOT_TARGET_DIR" ]; then
-    echo "Replacing game binaries folder: $DEPOT_TARGET_DIR/portal/bin/ with $INSTALL_DIR/portal/bin/"
-    mkdir -p "$DEPOT_TARGET_DIR/portal/bin"
-    rm -rf "$DEPOT_TARGET_DIR/portal/bin"
-    cp -R "$INSTALL_DIR/portal/bin/" "$DEPOT_TARGET_DIR/portal/bin/"
+    echo "Replacing game binaries folder: $DEPOT_TARGET_DIR/$gametitle/bin/ with $INSTALL_DIR/$gametitle/bin/"
+    mkdir -p "$DEPOT_TARGET_DIR/$gametitle/bin"
+    rm -rf "$DEPOT_TARGET_DIR/$gametitle/bin"
+    cp -R "$INSTALL_DIR/$gametitle/bin/" "$DEPOT_TARGET_DIR/$gametitle/bin/"
 
     echo "Replacing engine binaries folder: $DEPOT_TARGET_DIR/bin/ with $INSTALL_DIR/bin/"
     rm -rf "$DEPOT_TARGET_DIR/bin"
@@ -172,7 +186,7 @@ fi
 # 8. Create macOS Application Bundle (.app)
 echo "--- Creating macOS Application Bundle ---"
 
-APP_BUNDLE="$SCRIPT_DIR/Portal.app"
+APP_BUNDLE="$TEMP_WORKSPACE/Portal.app"
 CONTENTS_DIR="$APP_BUNDLE/Contents"
 MAC_OS_DIR="$CONTENTS_DIR/MacOS"
 RESOURCES_DIR="$CONTENTS_DIR/Resources"
@@ -186,7 +200,7 @@ cp -R "$DEPOT_TARGET_DIR/" "$RESOURCES_DIR/"
 
 # Create Info.plist
 echo "Generating Info.plist file..."
-cat << 'EOF' > "$CONTENTS_DIR/Info.plist"
+cat << EOF > "$CONTENTS_DIR/Info.plist"
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -198,7 +212,7 @@ cat << 'EOF' > "$CONTENTS_DIR/Info.plist"
     <key>CFBundleIconFile</key>
     <string>icon.icns</string>
     <key>CFBundleIdentifier</key>
-    <string>com.valve.portal.native</string>
+    <string>com.valve.${gametitle}.native</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
@@ -227,21 +241,21 @@ LAUNCH_DIR="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
 RESOURCE_PATH="\$(cd "\$LAUNCH_DIR/../Resources" && pwd)"
 
 cd "\$RESOURCE_PATH"
-exec "./hl2_osx" -game portal -language "$VALVE_LANG_NAME" -audiolanguage "$VALVE_LANG_NAME" "\$@"
+exec "./hl2_osx" -game $gametitle -language "$VALVE_LANG_NAME" -audiolanguage "$VALVE_LANG_NAME" "\$@"
 EOF
 
 chmod +x "$MAC_OS_DIR/hl2_osx"
 
-# Force configuration injection directly inside portal/cfg
+# Force configuration injection directly inside $gametitle/cfg
 echo "Injecting native engine localization variables..."
-mkdir -p "$RESOURCES_DIR/portal/cfg"
-cat << EOF > "$RESOURCES_DIR/portal/cfg/autoexec.cfg"
+mkdir -p "$RESOURCES_DIR/$gametitle/cfg"
+cat << EOF > "$RESOURCES_DIR/$gametitle/cfg/autoexec.cfg"
 cc_lang "$VALVE_LANG_NAME"
 cl_language "$VALVE_LANG_NAME"
 cc_subtitles "1"
 EOF
 
-cat << EOF > "$RESOURCES_DIR/portal/cfg/config.cfg"
+cat << EOF > "$RESOURCES_DIR/$gametitle/cfg/config.cfg"
 cc_lang "$VALVE_LANG_NAME"
 cl_language "$VALVE_LANG_NAME"
 cc_subtitles "1"
@@ -250,7 +264,7 @@ EOF
 
 # Extracting the native icon
 echo "Locating game icon within Steam assets..."
-DEPOT_ICNS="$RESOURCES_DIR/portal/resource/game.icns"
+DEPOT_ICNS="$RESOURCES_DIR/$gametitle/resource/game.icns"
 
 if [ -f "$DEPOT_ICNS" ]; then
     echo "Found authentic game icon at: $DEPOT_ICNS"
@@ -278,21 +292,21 @@ else
 fi
 
 echo "Re-linking absolute dylib path references to relative coordinates..."
-TARGET_BIN_FOLDERS=("$RESOURCES_DIR" "$ENGINE_BIN_DIR" "$RESOURCES_DIR/portal/bin")
+TARGET_BIN_FOLDERS=("$RESOURCES_DIR" "$ENGINE_BIN_DIR" "$RESOURCES_DIR/$gametitle/bin")
 
 for TARGET_DIR in "${TARGET_BIN_FOLDERS[@]}"; do
     if [ -d "$TARGET_DIR" ]; then
-        find "$TARGET_DIR" -maxdepth 1 -type f \( -name "*.dylib" -o -name "hl2_osx" \) | while read -r BINARY_FILE; do
+        find "$TARGET_DIR" -maxdepth 1 -type f \( -name "*.dylib" -o -name "${gametitle}_osx" \) | while read -r BINARY_FILE; do
             
             # PERFECT PATH EXTRACTION: Reads lines completely raw, stripping out version context brackets smoothly
-            otool -L "$BINARY_FILE" | grep -E "source-engine|PortalTemp|libtogl" | while IFS= read -r RAW_LINE; do
+            otool -L "$BINARY_FILE" | grep -E "source-engine|${gametitle}Temp|libtogl" | while IFS= read -r RAW_LINE; do
                 # Isolate absolute references between the leading tab space and the trailing parenthesis layout completely safe of spaces
                 BAD_PATH=$(echo "$RAW_LINE" | sed -E 's/^[[:space:]]*//; s/[[:space:]]*\(compatibility.*//')
                 
                 if [ -n "$BAD_PATH" ]; then
                     LIB_NAME=$(basename "$BAD_PATH")
                     
-                    if [[ "$BINARY_FILE" == *"/portal/bin/"* ]]; then
+                    if [[ "$BINARY_FILE" == *"/$gametitle/bin/"* ]]; then
                         NEW_RELATIVE_PATH="@loader_path/../../bin/$LIB_NAME"
                     else
                         NEW_RELATIVE_PATH="@loader_path/$LIB_NAME"
@@ -312,6 +326,11 @@ for TARGET_DIR in "${TARGET_BIN_FOLDERS[@]}"; do
         done
     fi
 done
+
+# Move the finalized application bundle out of the temporary folder
+echo "Moving finalized Application Bundle out of the temporary workspace..."
+mv "$APP_BUNDLE" "$SCRIPT_DIR/"
+APP_BUNDLE="$SCRIPT_DIR/Portal.app"
 
 # 10. Housekeeping and Clean Up
 echo "--- Performing Automated Cleanup Phase ---"
