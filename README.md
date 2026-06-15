@@ -1,7 +1,7 @@
 # Portal-patcher
-a script to compile Portal for Apple Silicon
+a script to compile Portal for Apple Silicon and Intel 64 bit
 
-This script will create an Apple Silicon version of Portal for macOS.
+This script will create an Apple Silicon or Intel 6S bit version of Portal for macOS.
 
 It is adapted from [this guide](https://jxhug.notion.site/Guide-to-Installing-Portal-Using-Source-Engine-on-macOS-660803f9ced149cfa1647d38fd5a7092) from 2023 which had these issues:
 - compiler commands were outdated with the latest updates to Clang
@@ -12,7 +12,7 @@ This script aims to fix all these issues and create an application bundle with m
 
 ## How to use:
 
-- to the right of this window, click "releases", expand "assets" if necessary and click on "Portal.command.zip" to download it
+- to the right of this window, click "releases", expand "assets" if necessary and click on "Portal.Patcher.zip" to download it
 - unzip the file if necessary
 - Double click Portal.command. You will have a Gatekeeper alert preventing the script from running, go to system settings > security and privacy, scroll down and click "open anyway".
 
