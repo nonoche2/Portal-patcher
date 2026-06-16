@@ -43,41 +43,41 @@ Normally, Steam communicates with games through a dynamic library which isn't in
 replacing with your language instead of french. the tag '-language' is for the UI and '-audiolanguage' is for the dialogues.
 Portal supports these languages for the audio:
 
-russian
-spanish
-french
-german
+russian  
+spanish  
+french  
+german  
 
 and these languages for the UI:
 
-ukrainian
-swedish
+ukrainian  
+swedish  
 tchinese (for traditional Chinese)
-schinese (for simplified Chinese)
-thai.dat
-thai
-turkish
-brazilian
-bulgarian
-czech
-danish
-dutch
-english
-finnish
-french
-german
-greek
-hungarian
-italian
-japanese
-korean
-koreana
-latam (for latin american Spanish)
-norwegian
-polish
-portuguese
-romanian
-russian
+schinese (for simplified Chinese)  
+thai.dat  
+thai  
+turkish  
+brazilian  
+bulgarian  
+czech  
+danish  
+dutch  
+english  
+finnish  
+french  
+german  
+greek  
+hungarian  
+italian  
+japanese  
+korean  
+koreana  
+latam (for latin american Spanish)  
+norwegian  
+polish  
+portuguese  
+romanian  
+russian  
 spanish
 
 you can now launch Portal from Steam
